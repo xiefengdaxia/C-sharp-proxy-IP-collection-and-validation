@@ -33,7 +33,7 @@ namespace 代理ip抓取
             label3.Text = "线程数:" + trackBar1.Value;
             maxThread = trackBar1.Value;
         }
-        private void GetProxyIp(object url)
+        private void GetHTML_SaveProxyIp(object url)
         {
 
             try
@@ -41,14 +41,14 @@ namespace 代理ip抓取
                 //string Cookie = "_free_proxy_session=BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiJThiZjU2NDZlZjljOWIxY2ExODA4NTEwYTM1ZjVlMTlmBjsAVEkiEF9jc3JmX3Rva2VuBjsARkkiMThxV1Nza2o0QVNBZG1YdHRVYzRibm5OQkQwckt3V3FwL04wL3RNUDJMU1E9BjsARg%3D%3D--784d7667471701a7b9941447ccef4f4f36935fae; CNZZDATA4793016=cnzz_eid%3D1324463153-1448595402-%26ntime%3D1448595402";
                 string userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36 SE 2.X MetaSr 1.0";
                 string html = helper.GetResponseString(helper.CreateGetHttpResponse(url.ToString(), 50, userAgent, null));
-                saveIpTxt(过滤438(html), "西刺代理");
+                saveIpTxt(过滤(html, "//td[@class='info_list']"), "代理ip");
             }
             catch
             {
                 //throw ex;
             }
-            //return html;
         }
+
         //public static string ClearHtmlExceptA(string html)
         //{
         //    string acceptable = "tr";
@@ -81,17 +81,17 @@ namespace 代理ip抓取
             return sb.ToString();
         }
 
-        public static string 过滤438(string html)
+        public static string 过滤(string html,string xpath)
         {
             HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(html);
             StringBuilder sb = new StringBuilder();
 
-            HtmlNode node = doc.DocumentNode.SelectSingleNode("/html/body/table[3]/tbody[1]/tr/td/table[2]");///html/body/table[3]/tbody/tr/td/table[2]/tbody/tr/td/table[2]/tbody/tr/td
+            HtmlNode node = doc.DocumentNode.SelectSingleNode(xpath);
             IEnumerable<HtmlNode> nodeList = node.ChildNodes;  //获取该元素所有的父节点的集合
             foreach (HtmlNode item in nodeList)
             {
-                MessageBox.Show(item.InnerText);
+                //MessageBox.Show(item.InnerText);
                 if (item.InnerText.Length > 10 && item.InnerText.Contains("."))
                 {
                     string a = Regex.Replace(item.InnerText, @"[\n\r]", "-", RegexOptions.IgnoreCase).Replace(" ", "");
@@ -283,13 +283,13 @@ namespace 代理ip抓取
                 for (int i = 1; i <= 388; i++)
                 {
 
-                    ThreadPool.QueueUserWorkItem(this.GetProxyIp, "http://www.xicidaili.com/nn/" + i);
+                    ThreadPool.QueueUserWorkItem(this.GetHTML_SaveProxyIp, "http://www.xicidaili.com/nn/" + i);
 
                 }
 
                 for (int i = 1; i <= 162; i++)
                 {
-                    ThreadPool.QueueUserWorkItem(this.GetProxyIp, "http://www.xicidaili.com/wn/" + i);
+                    ThreadPool.QueueUserWorkItem(this.GetHTML_SaveProxyIp, "http://www.xicidaili.com/wn/" + i);
                 }
             }
             catch (Exception ex)
@@ -401,7 +401,7 @@ namespace 代理ip抓取
                 //for (int i = 1; i <= 388; i++)
                 //{
 
-                    ThreadPool.QueueUserWorkItem(this.GetProxyIp, "http://www.004388.com/ip/index.html");
+                    ThreadPool.QueueUserWorkItem(this.GetHTML_SaveProxyIp, "http://www.004388.com/ip/index.html");
 
                 //}
 

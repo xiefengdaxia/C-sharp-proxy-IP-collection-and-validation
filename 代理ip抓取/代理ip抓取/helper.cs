@@ -211,7 +211,7 @@ namespace 代理ip抓取
                     webresponse.GetResponseStream(), CompressionMode.Decompress))
                 {
 
-                    using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                    using (StreamReader reader = new StreamReader(stream, Encoding.Default))
                     {
 
                         return reader.ReadToEnd();
