@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -27,6 +28,7 @@ namespace 代理ip抓取
         private void Form1_Load(object sender, EventArgs e)
         {
             showThreadCount();
+            SQLiteConnection.CreateFile(Application.StartupPath + "\\123.sqlite");
         }
         private void showThreadCount()
         {
@@ -156,7 +158,7 @@ namespace 代理ip抓取
             IEnumerable<HtmlNode> nodeList = node.ChildNodes;  //获取该元素所有的父节点的集合
             foreach (HtmlNode item in nodeList)
             {
-                MessageBox.Show(item.InnerText);
+                //MessageBox.Show(item.InnerText);
                 if (item.InnerText.Length > 10 && item.InnerText.Contains("."))
                 {
                     string a = Regex.Replace(item.InnerText, @"[\n\r]", "-", RegexOptions.IgnoreCase).Replace(" ", "");
