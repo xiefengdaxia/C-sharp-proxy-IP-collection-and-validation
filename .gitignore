@@ -13,9 +13,10 @@
 *.a
 *.la
 *.lo
+*.pdb
+*.txt
 
 # Shared objects (inc. Windows DLLs)
-*.dll
 *.so
 *.so.*
 *.dylib
@@ -32,5 +33,3 @@
 *.dSYM/
 */obj/Debug/*
 */*/obj/Debug/*
-*/bin/Debug/*
-*/*/bin/Debug/*
