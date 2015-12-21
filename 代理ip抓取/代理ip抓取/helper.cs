@@ -13,7 +13,7 @@ namespace 代理ip抓取
 {
     class helper
     {
-        public static 代理ip抓取.Form1.queueresult DownLoadHtml(string url, string proxyip, 代理ip抓取.Form1.queueresult q, int timeout = 10, bool enableProxy = true)
+        public static 代理ip抓取.Form1.queueresult DownLoadHtml(string url, string proxyip, 代理ip抓取.Form1.queueresult q,string localhostIpAddress, int timeout = 10, bool enableProxy = true)
         {
             var result = new 代理ip抓取.Form1.queueresult();
             try
@@ -45,9 +45,9 @@ namespace 代理ip抓取
                 }
                 if (html.Length > 10)
                 {
-                    if (!html.Contains("175.13.62.153"))
+                    if (!html.Contains("111.13.62.153"))
                     {
-                        saveIpTxt(proxyip, "验证可用高匿代理ip");
+                        saveIpTxt(proxyip, Form1.txtpath + "验证可用√√高匿代理ip");
                         lock (q)
                         {
                             q.Gaoni++;
@@ -56,7 +56,7 @@ namespace 代理ip抓取
                     }
                     else
                     {
-                        saveIpTxt(proxyip, "验证可用透明代理ip");
+                        saveIpTxt(proxyip, "验证可用√透明代理ip");
                         lock (q)
                         {
                             q.Touming++;

@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -30,7 +31,7 @@ namespace 代理ip抓取
         {
             showThreadCount();
             //SQLiteConnection.CreateFile(Application.StartupPath + "\\123.sqlite");
-            connectToDatabase(); 
+            connectToDatabase();
             showDataGV();
             dataGridView1.RowHeadersDefaultCellStyle.Padding = new Padding(15);
         }
@@ -52,7 +53,7 @@ namespace 代理ip抓取
         private void showDataGV()
         {
             SQLiteCommand cmd = new SQLiteCommand(m_dbConnection);//实例化SQL命令
-            cmd.CommandText="select * from proxyIpLinksSource";
+            cmd.CommandText = "select * from proxyIpLinksSource";
             //DataSet ds=SQLiteHelper.ExecuteDataset(cmd);
             ds = new DataSet();
             da = new SQLiteDataAdapter(cmd);
@@ -199,19 +200,21 @@ namespace 代理ip抓取
         }
 
         public static object locker = new object();
+        public static string txtpath = Application.StartupPath + "\\代理ip\\";
         public static void saveIpTxt(string ips, string txtName)
         {
             lock (locker)
             {
-                if (File.Exists(Application.StartupPath + "\\" + txtName + ".txt"))
+
+                if (File.Exists(txtpath + txtName + ".txt"))
                 {
-                    StreamWriter streamWriter = File.AppendText(txtName + ".txt");
+                    StreamWriter streamWriter = File.AppendText(txtpath + txtName + ".txt");
                     streamWriter.WriteLine(ips);
                     streamWriter.Close();
                 }
                 else
                 {
-                    StreamWriter streamWriter = File.CreateText(txtName + ".txt");
+                    StreamWriter streamWriter = File.CreateText(txtpath + txtName + ".txt");
                     streamWriter.WriteLine(ips);
                     streamWriter.Close();
                 }
@@ -227,6 +230,9 @@ namespace 代理ip抓取
                 MessageBox.Show("你还没有导入txt！", "友情提示");
                 return;
             }
+            MessageBox.Show("正在获取您的外网ip地址！","友情提示");
+            ipAddress = getLocalhostIpAddress();
+            MessageBox.Show("成功获取您的外网ip地址：\n\r"+ipAddress, "友情提示");
             qr = new queueresult[maxThread];
             checkedCount = 0;
             gaoni = 0;
@@ -288,6 +294,22 @@ namespace 代理ip抓取
             touming += r.Touming;
             label1.Text = "验证：" + checkedCount + "||失败:" + fail + "||透明:" + touming + "||高匿:" + gaoni;
         }
+        /// <summary>
+        /// 获取本机的外网ip地址
+        /// </summary>
+        /// <returns></returns>
+        public string ipAddress;
+        private string getLocalhostIpAddress()
+        {
+            string externalIP = string.Empty;
+            var regex = @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b";
+            using (var webclient = new WebClient())  
+            {  
+                var rawRes = webclient.DownloadString("http://ip.cn");  
+                externalIP = Regex.Match(rawRes, regex).Value;  
+            }
+            return externalIP;
+        }
         private void checkProxyIp(object i)
         {
 
@@ -301,14 +323,14 @@ namespace 代理ip抓取
                 //    muxConsole.ReleaseMutex(); //如果此线程达不到可执行线程上限,则继续开通,让后面的线程进来  
                 //    releasedFlag = true;
                 //}
-
+                
                 var queueID = (int)i;
                 queueresult q = qr[queueID] = new queueresult();
                 ShowText(i + "线程开始,队列id：" + queueID + "需要处理数" + qrr[queueID].Count + "\n\r");
                 //while (qrr[queueID].Count != 0)
                 while (qrr[queueID].Count > 0)
                 {
-                    var r = helper.DownLoadHtml("http://ip.cn/", qrr[queueID].Dequeue().ToString(), q);
+                    var r = helper.DownLoadHtml("http://ip.cn/", qrr[queueID].Dequeue().ToString(), q, ipAddress);
                     //checkedCount = 0;
                     //fail = 0;
                     //gaoni = 0;
@@ -372,21 +394,40 @@ namespace 代理ip抓取
         /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
+            GetHTML_SaveProxyIpMethod gs;
             try
             {
-                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod();
-                gs.Url = "http://www.xicidaili.com/nn/";
-                gs.Url_plus = string.Empty;
-                gs.Xpath = "//*[@id='ip_list']";
-                gs.Start = 1;
-                gs.End = 130;
-                gs.TxtName = "代理ip";
-                Thread worker = new Thread(delegate()
-               {
-                   gs.DoWork();
-               });
-                worker.IsBackground = true;
-                worker.Start();
+                Thread createWorker = new Thread(delegate()
+                {
+                    SQLiteCommand cmd = new SQLiteCommand(m_dbConnection);//实例化SQL命令
+                    cmd.CommandText = "select * from proxyIpLinksSource where checked=1";
+                    if (cmd.Connection.State == ConnectionState.Closed)
+                        cmd.Connection.Open();
+                    SQLiteDataReader idr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+                    while (idr.Read())
+                    {
+                        //MessageBox.Show(idr[0].ToString());
+                        gs = new GetHTML_SaveProxyIpMethod();
+                        gs.Url = idr["Url"].ToString();
+                        gs.Url_plus = idr["Url_plus"].ToString();
+                        gs.Xpath = idr["Xpath"].ToString();
+                        gs.Start = Convert.ToInt32(idr["Start"]);
+                        gs.End = Convert.ToInt32(idr["End"]);
+                        gs.TxtName = idr["TxtName"].ToString();
+                        Thread worker = new Thread(delegate()
+                        {
+                            gs.DoWork();
+                        });
+                        worker.IsBackground = true;
+                        worker.Start();
+                        worker.Join();
+                    }
+                });
+                createWorker.IsBackground = true;
+                createWorker.Start();
+
+
+
             }
             catch (Exception ex)
             {
@@ -510,7 +551,7 @@ namespace 代理ip抓取
             {
                 MessageBox.Show(ex.Message);
             }
-            
+
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -581,7 +622,7 @@ namespace 代理ip抓取
             SolidBrush solidBrush = new SolidBrush(dataGridView.RowHeadersDefaultCellStyle.ForeColor);
             int xh = e.RowIndex + 1;
             e.Graphics.DrawString(xh.ToString(CultureInfo.CurrentUICulture), e.InheritedRowStyle.Font, solidBrush, e.RowBounds.Location.X + 5, e.RowBounds.Location.Y + 4);
-          
+
         }
     }
 }
