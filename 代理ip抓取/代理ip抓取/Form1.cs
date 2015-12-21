@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -28,12 +29,38 @@ namespace 代理ip抓取
         private void Form1_Load(object sender, EventArgs e)
         {
             showThreadCount();
-            SQLiteConnection.CreateFile(Application.StartupPath + "\\123.sqlite");
+            //SQLiteConnection.CreateFile(Application.StartupPath + "\\123.sqlite");
+            connectToDatabase(); 
+            showDataGV();
+            dataGridView1.RowHeadersDefaultCellStyle.Padding = new Padding(15);
         }
         private void showThreadCount()
         {
             label3.Text = "线程数:" + trackBar1.Value;
             maxThread = trackBar1.Value;
+        }
+        //数据库连接
+        SQLiteConnection m_dbConnection;
+        SQLiteDataAdapter da;
+        DataSet ds;
+        //创建一个连接到指定数据库
+        void connectToDatabase()
+        {
+            m_dbConnection = new SQLiteConnection("Data Source=123.sqlite;Version=3;");
+            m_dbConnection.Open();
+        }
+        private void showDataGV()
+        {
+            SQLiteCommand cmd = new SQLiteCommand(m_dbConnection);//实例化SQL命令
+            cmd.CommandText="select * from proxyIpLinksSource";
+            //DataSet ds=SQLiteHelper.ExecuteDataset(cmd);
+            ds = new DataSet();
+            da = new SQLiteDataAdapter(cmd);
+            da.Fill(ds);
+            //da.Dispose();
+            cmd.Connection.Close();
+            //cmd.Dispose();
+            dataGridView1.DataSource = ds.Tables[0];
         }
         /// <summary>
         /// 根据网址下载HTML源码
@@ -533,6 +560,28 @@ namespace 代理ip抓取
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            //sqlCommandBuilder bu = new sqlcommandbuilder(dataAdapter);
+            //dataAdap.update(dataset, "Table");
+            SQLiteCommandBuilder bu = new SQLiteCommandBuilder(da);
+            da.Update(ds, "Table");
+            MessageBox.Show("保存成功！");
+            showDataGV();
+        }
+
+        private void dataGridView1_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            SetDataGridViewRowXh(e, dataGridView1);
+        }
+        private void SetDataGridViewRowXh(DataGridViewRowPostPaintEventArgs e, DataGridView dataGridView)
+        {
+            SolidBrush solidBrush = new SolidBrush(dataGridView.RowHeadersDefaultCellStyle.ForeColor);
+            int xh = e.RowIndex + 1;
+            e.Graphics.DrawString(xh.ToString(CultureInfo.CurrentUICulture), e.InheritedRowStyle.Font, solidBrush, e.RowBounds.Location.X + 5, e.RowBounds.Location.Y + 4);
+          
         }
     }
 }
