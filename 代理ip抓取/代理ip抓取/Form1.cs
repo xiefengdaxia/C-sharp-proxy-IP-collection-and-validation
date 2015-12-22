@@ -25,7 +25,7 @@ namespace 代理ip抓取
             Control.CheckForIllegalCrossThreadCalls = false;
 
         }
-        private int maxThread = 50;//默认可执行线程最大数量
+        private int maxThread = 100;//默认可执行线程最大数量
         private static System.Threading.Mutex muxConsole = new System.Threading.Mutex();
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -128,19 +128,26 @@ namespace 代理ip抓取
                 };
                 this.rtb.Invoke(actionDelegate, text);
             }
-            public void GetHTML_SaveProxyIp(string url, string xpath, string txtName)
+            public void GetHTML_SaveProxyIp(string url, string xpath, string txtName, int model)
             {
 
                 try
                 {
                     //string Cookie = "_free_proxy_session=BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiJThiZjU2NDZlZjljOWIxY2ExODA4NTEwYTM1ZjVlMTlmBjsAVEkiEF9jc3JmX3Rva2VuBjsARkkiMThxV1Nza2o0QVNBZG1YdHRVYzRibm5OQkQwckt3V3FwL04wL3RNUDJMU1E9BjsARg%3D%3D--784d7667471701a7b9941447ccef4f4f36935fae; CNZZDATA4793016=cnzz_eid%3D1324463153-1448595402-%26ntime%3D1448595402";
                     string userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36 SE 2.X MetaSr 1.0";
-                    string html = helper.GetResponseString(helper.CreateGetHttpResponse(url, 50, userAgent, null));
-                    saveIpTxt(过滤(html, xpath), txtName);
+                    string html = helper.GetResponseString(helper.CreateGetHttpResponse(url, 20, userAgent, null));
+                    if (model == 0)
+                    {
+                        saveIpTxt(过滤(html), txtName);
+                    }
+                    else
+                    {
+                        saveIpTxt(过滤(html, xpath), txtName);
+                    }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    //throw ex;
+                    throw ex;
                 }
             }
             public void DoWork()
@@ -148,17 +155,25 @@ namespace 代理ip抓取
                 try
                 {
                     appendLine(DateTime.Now + "\n" + txtName + url + "开始采集！");
-                    for (int i = start; i <= end; i++)
+                    if (start == 0)
                     {
+                        GetHTML_SaveProxyIp(url, xpath, txtName,start);
+                    }
+                    else
+                    {
+                        for (int i = start; i <= end; i++)
+                        {
 
-                        GetHTML_SaveProxyIp(url + i + url_plus, xpath, txtName);
+                            GetHTML_SaveProxyIp(url + i + url_plus, xpath, txtName,start);
 
+                        }
                     }
                     appendLine(DateTime.Now + "\n" + txtName + url + "采集完毕！");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, ex.StackTrace);
+                    appendLine(DateTime.Now + "\n" + txtName + url + "采集出错！\n" + ex.Message);
+                    MessageBox.Show(ex.StackTrace, txtName + ">>" + ex.Message);
                 }
             }
         }
@@ -174,21 +189,15 @@ namespace 代理ip抓取
         //}
         public static string 过滤(string html)
         {
-            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-            doc.LoadHtml(html);
             StringBuilder sb = new StringBuilder();
-
-            HtmlNode node = doc.DocumentNode.SelectSingleNode("//*[@id='ip_list']");////*[@id="ip_list"]/tbody
-            IEnumerable<HtmlNode> nodeList = node.ChildNodes;  //获取该元素所有的父节点的集合
-            foreach (HtmlNode item in nodeList)
+            var regex = @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\:\d{1,5}\b";
+            Regex r = new Regex(regex, RegexOptions.IgnoreCase);
+            var rawRes = html;
+            Match m = r.Match(html);
+            while (m.Success)
             {
-                if (item.InnerText.Length > 10 && item.InnerText.Contains("."))
-                {
-                    string a = Regex.Replace(item.InnerText, @"[\n\r]", "-", RegexOptions.IgnoreCase).Replace(" ", "");
-                    //采集格式"---115.46.100.118-8123--广西南宁--高匿-HTTP---------------15-11-2712:00-";
-                    string[] arr = a.Split(new string[] { "-" }, StringSplitOptions.RemoveEmptyEntries);
-                    sb.AppendLine(arr[0] + ":" + arr[1]);
-                }
+                sb.AppendLine(m.Value);
+                m = m.NextMatch();
             }
 
             return sb.ToString();
@@ -243,7 +252,7 @@ namespace 代理ip抓取
         public static queueresult[] qr;
         private void button1_Click(object sender, EventArgs e)
         {
-            if (path==null)
+            if (path == null)
             {
                 MessageBox.Show("你还没有导入txt！", "友情提示");
                 return;
@@ -467,7 +476,7 @@ namespace 代理ip抓取
                 {
                     path = ofd.FileNames;
                 }
-                if (path==null)
+                if (path == null)
                 {
                     return;
                 }
@@ -483,7 +492,7 @@ namespace 代理ip抓取
                             content.Append(sr.ReadToEnd());//一次性读入内存
                         }
                     }
-                    
+
 
                     MemoryStream ms = new MemoryStream(Encoding.GetEncoding("GB2312").GetBytes(content.ToString()));//放入内存流，以便逐行读取
                     linecount = 0;
@@ -579,25 +588,16 @@ namespace 代理ip抓取
 
         private void button5_Click(object sender, EventArgs e)
         {
-            try
+            string html = @"> 43.243.112.79:3128<br /> 43.243.112.86:3128<br /> 43.243.112.87:3128<br /> 43.243.112.88:3128<br /> 43.252.231.157:3128<br /> 43.254.127.189:8080<br /> 43.254.127.190:8080<br /> 45.115.172.216:8080<br /> 45.115.172.37:8080<br /> 45.115.173.168:8080<br /> 45.115.173.187:8080<br /> 45.115.175.126:8080<br /> 45.115.175.130:8080<br /> 45.115.175.179:8080<br /> 45.124.67.59:8000<br /> 45.126.253.2:8080<br /> 45.34.15.137:3128<br /> 45.55.41.80:8080<br /> 45.64.156.90:8080<br /> 45.64.80.209:8080<br /> 45.79.105.121:3128<br /> 45.79.133.35:3128<br /> 46.101.171.49:3128<br /> 46.105.169.214:3128<br /> 46.105.183.93:3128<br /> 46.105.211.32:3128<br /> 46.105.244.83:3128<br /> 46.105.244.85:3128<br /> 46.146.226.231:8080<br /> 46.16.226.10:8080<br /> 46.175.185.53:8080<br /> 46.19.231.50:8080<br /> 46.209.216.107:8080<br /> 46.209.236.138:8080<br /> 46.219.116.2:8081<br /> 46.243.66.113:8080<br /> 46.28.72.141:8080<br /> 46.41.130.135:3128<br /> 46.46.103.32:3128<br /> 46.53.2.64:8080<br /> 46.8.48.26:80<br /> 47.88.0.146:3128<br /> 47.88.1.230:3128<br /> 47.88.1.56:8080<br /> 47.88.137.107:3128<br /> 47.88.139.96:3128<br /> 47.88.14.58:3128<br /> 47.88.5.94:3128<br /> 49.0.39.241:8080<br /> 49.156.47.30:8080<br /> 49.213.12.98:3128<br /> 49.231.224.185:80<br /> 49.88.98.200:8090<br /> 5.10.103.245:8080<br /> 5.135.161.61:3128<br /> 5.135.163.225:8080<br /> 5.135.223.133:8080<br /> 5.135.223.82:8080<br /> 5.140.213.177:6000<br /> 5.150.247.73:8080<br /> 5.160.247.16:8080<br /> 5.160.247.19:8080<br /> 5.160.247.60:8080<br /> 5.175.147.177:3128<br /> 5.189.167.48:3128<br /> 5.189.243.219:8080<br /> 5.196.190.138:8080<br /> 5.196.190.139:8080<br /> 5.196.190.140:8080<br /> 5.196.190.143:8080<br /> 5.196.53.100:8080<br /> 5.196.53.103:8080<br /> 5.196.99.243:3128<br /> 5.2.225.110:3128<br /> 5.220.33.9:8080<br /> 5.255.80.121:3128<br /> 5.39.31.223:3128<br /> 5.39.59.95:3128<br /> 5.53.16.183:8080<br /> 5.56.12.10:8080<br /> 5.56.12.25:8080<br /> 5.56.12.9:8080<br /> 5.62.128.165:8080<br /> 51.254.134.204:3128<br /> 51.255.115.246:3128<br /> 52.1.73.190:3128<br />";
+            string externalIP = string.Empty;
+            var regex = @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\:\d{1,5}\b";
+            Regex r = new Regex(regex, RegexOptions.IgnoreCase);
+            var rawRes = html;
+            Match m = r.Match(html);
+            while (m.Success)
             {
-                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod(richTextBox1);
-                gs.Url = "http://www.kuaidaili.com/free/inha/";
-                gs.Url_plus = "/";
-                gs.Xpath = "//*[@id='list']/table/tbody";//starts-with('XML','X')
-                gs.Start = 1;
-                gs.End = 809;
-                gs.TxtName = "快代理ip";
-                Thread worker = new Thread(delegate()
-                {
-                    gs.DoWork();
-                });
-                worker.IsBackground = true;
-                worker.Start();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(m.Value);
+                m = m.NextMatch();
             }
         }
 

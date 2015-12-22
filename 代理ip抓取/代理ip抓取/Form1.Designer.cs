@@ -55,6 +55,7 @@
             this.TxtName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.check = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.id = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label4 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -182,7 +183,7 @@
             this.trackBar1.TabIndex = 6;
             this.trackBar1.TickFrequency = 10;
             this.trackBar1.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
-            this.trackBar1.Value = 50;
+            this.trackBar1.Value = 100;
             this.trackBar1.ValueChanged += new System.EventHandler(this.trackBar1_ValueChanged_1);
             // 
             // button6
@@ -213,7 +214,7 @@
             this.dataGridView1.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader;
             this.dataGridView1.RowTemplate.Height = 23;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(514, 285);
+            this.dataGridView1.Size = new System.Drawing.Size(514, 311);
             this.dataGridView1.TabIndex = 9;
             this.dataGridView1.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dataGridView1_RowPostPaint);
             // 
@@ -229,6 +230,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.label4);
             this.tabPage1.Controls.Add(this.button7);
             this.tabPage1.Controls.Add(this.dataGridView1);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
@@ -241,7 +243,7 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(426, 307);
+            this.button7.Location = new System.Drawing.Point(427, 320);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(84, 38);
             this.button7.TabIndex = 10;
@@ -278,9 +280,9 @@
             // Xpath
             // 
             this.Xpath.DataPropertyName = "Xpath";
-            this.Xpath.HeaderText = "Xpath";
+            this.Xpath.HeaderText = "Xpath|Regex";
             this.Xpath.Name = "Xpath";
-            this.Xpath.Width = 60;
+            this.Xpath.Width = 96;
             // 
             // Start
             // 
@@ -319,6 +321,15 @@
             this.id.Name = "id";
             this.id.Width = 54;
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(16, 333);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(359, 12);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "ps:开始页为0代表启用正则模式采集代理ip否则使用xpath路径采集";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -337,6 +348,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            this.tabPage1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -370,6 +382,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn TxtName;
         private System.Windows.Forms.DataGridViewCheckBoxColumn check;
         private System.Windows.Forms.DataGridViewTextBoxColumn id;
+        private System.Windows.Forms.Label label4;
     }
 }
 

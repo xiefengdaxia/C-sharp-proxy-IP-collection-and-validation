@@ -131,7 +131,7 @@ namespace 代理ip抓取
             //设置代理UserAgent和超时
             request.UserAgent = userAgent;
             request.Headers.Add("Accept-Encoding", "gzip");
-            //request.Timeout = timeout;
+            //request.Timeout = timeout*1000;
             if (cookies != null)
             {
                 request.CookieContainer = new CookieContainer();
@@ -151,7 +151,7 @@ namespace 代理ip抓取
             {
                 //ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(CheckValidationResult);
                 request = WebRequest.Create(url) as HttpWebRequest;
-                //request.ProtocolVersion = HttpVersion.Version10;
+                request.ProtocolVersion = HttpVersion.Version10;
             }
             else
             {
@@ -161,8 +161,8 @@ namespace 代理ip抓取
             request.ContentType = "application/x-www-form-urlencoded";
 
             //设置代理UserAgent和超时
-            //request.UserAgent = userAgent;
-            //request.Timeout = timeout; 
+            request.UserAgent = userAgent;
+            request.Timeout = timeout; 
 
             if (cookies != null)
             {
