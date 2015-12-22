@@ -45,8 +45,8 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
             this.button7 = new System.Windows.Forms.Button();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
             this.Url = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Url_plus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Xpath = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -88,7 +88,7 @@
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 2;
-            this.button2.Text = "抓西刺代理";
+            this.button2.Text = "抓所有代理";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
@@ -239,6 +239,16 @@
             this.tabPage1.Text = "采集规则";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // button7
+            // 
+            this.button7.Location = new System.Drawing.Point(426, 307);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(84, 38);
+            this.button7.TabIndex = 10;
+            this.button7.Text = "保存";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
+            // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.richTextBox1);
@@ -250,21 +260,12 @@
             this.tabPage2.Text = "日志";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // button7
-            // 
-            this.button7.Location = new System.Drawing.Point(426, 307);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(84, 38);
-            this.button7.TabIndex = 10;
-            this.button7.Text = "保存";
-            this.button7.UseVisualStyleBackColor = true;
-            this.button7.Click += new System.EventHandler(this.button7_Click);
-            // 
             // Url
             // 
             this.Url.DataPropertyName = "Url";
             this.Url.HeaderText = "链接";
             this.Url.Name = "Url";
+            this.Url.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.Url.Width = 54;
             // 
             // Url_plus

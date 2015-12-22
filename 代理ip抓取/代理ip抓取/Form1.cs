@@ -112,6 +112,22 @@ namespace 代理ip抓取
                 get { return end; }
                 set { end = value; }
             }
+
+            RichTextBox rtb;
+
+            public GetHTML_SaveProxyIpMethod(RichTextBox rtb)
+            {
+                this.rtb = rtb;
+            }
+            public void appendLine(string text)
+            {
+                Action<string> actionDelegate = (x) =>
+                {
+
+                    this.rtb.AppendText(text + "\r\n");
+                };
+                this.rtb.Invoke(actionDelegate, text);
+            }
             public void GetHTML_SaveProxyIp(string url, string xpath, string txtName)
             {
 
@@ -131,12 +147,14 @@ namespace 代理ip抓取
             {
                 try
                 {
+                    appendLine(DateTime.Now + "\n" + txtName + url + "开始采集！");
                     for (int i = start; i <= end; i++)
                     {
 
                         GetHTML_SaveProxyIp(url + i + url_plus, xpath, txtName);
 
                     }
+                    appendLine(DateTime.Now + "\n" + txtName + url + "采集完毕！");
                 }
                 catch (Exception ex)
                 {
@@ -225,14 +243,14 @@ namespace 代理ip抓取
         public static queueresult[] qr;
         private void button1_Click(object sender, EventArgs e)
         {
-            if (path == "")
+            if (path==null)
             {
                 MessageBox.Show("你还没有导入txt！", "友情提示");
                 return;
             }
-            MessageBox.Show("正在获取您的外网ip地址！","友情提示");
+            MessageBox.Show("正在获取您的外网ip地址！", "友情提示");
             ipAddress = getLocalhostIpAddress();
-            MessageBox.Show("成功获取您的外网ip地址：\n\r"+ipAddress, "友情提示");
+            MessageBox.Show("成功获取您的外网ip地址：\n\r" + ipAddress, "友情提示");
             qr = new queueresult[maxThread];
             checkedCount = 0;
             gaoni = 0;
@@ -303,10 +321,10 @@ namespace 代理ip抓取
         {
             string externalIP = string.Empty;
             var regex = @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b";
-            using (var webclient = new WebClient())  
-            {  
-                var rawRes = webclient.DownloadString("http://ip.cn");  
-                externalIP = Regex.Match(rawRes, regex).Value;  
+            using (var webclient = new WebClient())
+            {
+                var rawRes = webclient.DownloadString("http://ip.cn");
+                externalIP = Regex.Match(rawRes, regex).Value;
             }
             return externalIP;
         }
@@ -323,7 +341,7 @@ namespace 代理ip抓取
                 //    muxConsole.ReleaseMutex(); //如果此线程达不到可执行线程上限,则继续开通,让后面的线程进来  
                 //    releasedFlag = true;
                 //}
-                
+
                 var queueID = (int)i;
                 queueresult q = qr[queueID] = new queueresult();
                 ShowText(i + "线程开始,队列id：" + queueID + "需要处理数" + qrr[queueID].Count + "\n\r");
@@ -407,7 +425,7 @@ namespace 代理ip抓取
                     while (idr.Read())
                     {
                         //MessageBox.Show(idr[0].ToString());
-                        gs = new GetHTML_SaveProxyIpMethod();
+                        gs = new GetHTML_SaveProxyIpMethod(richTextBox1);
                         gs.Url = idr["Url"].ToString();
                         gs.Url_plus = idr["Url_plus"].ToString();
                         gs.Xpath = idr["Xpath"].ToString();
@@ -436,7 +454,7 @@ namespace 代理ip抓取
         }
 
         Queue[] qrr;
-        string path = string.Empty;
+        string[] path = null;
         private void button3_Click(object sender, EventArgs e)
         {
             try
@@ -444,12 +462,12 @@ namespace 代理ip抓取
                 OpenFileDialog ofd = new OpenFileDialog();
                 ofd.Title = "打开";
                 ofd.Filter = "所有文件|*.txt";
-
+                ofd.Multiselect = true;
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    path = ofd.FileName;
+                    path = ofd.FileNames;
                 }
-                if (path == "")
+                if (path==null)
                 {
                     return;
                 }
@@ -457,12 +475,17 @@ namespace 代理ip抓取
                 Thread worker = new Thread(delegate()
                 {
                     DateTime dt_read_ip_txt = DateTime.Now;
-                    string content = string.Empty;
-                    using (StreamReader sr = new StreamReader(path))
+                    StringBuilder content = new StringBuilder();
+                    for (int i = 0; i < path.Length; i++)
                     {
-                        content = sr.ReadToEnd();//一次性读入内存
+                        using (StreamReader sr = new StreamReader(path[i]))
+                        {
+                            content.Append(sr.ReadToEnd());//一次性读入内存
+                        }
                     }
-                    MemoryStream ms = new MemoryStream(Encoding.GetEncoding("GB2312").GetBytes(content));//放入内存流，以便逐行读取
+                    
+
+                    MemoryStream ms = new MemoryStream(Encoding.GetEncoding("GB2312").GetBytes(content.ToString()));//放入内存流，以便逐行读取
                     linecount = 0;
                     string line = string.Empty;
                     ipArr = new ArrayList();
@@ -533,7 +556,7 @@ namespace 代理ip抓取
         {
             try
             {
-                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod();
+                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod(richTextBox1);
                 gs.Url = "http://www.004388.com/ip/index_";
                 gs.Url_plus = ".html";
                 gs.Xpath = "//td[@class='info_list']";
@@ -558,7 +581,7 @@ namespace 代理ip抓取
         {
             try
             {
-                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod();
+                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod(richTextBox1);
                 gs.Url = "http://www.kuaidaili.com/free/inha/";
                 gs.Url_plus = "/";
                 gs.Xpath = "//*[@id='list']/table/tbody";//starts-with('XML','X')
@@ -582,7 +605,7 @@ namespace 代理ip抓取
         {
             try
             {
-                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod();
+                GetHTML_SaveProxyIpMethod gs = new GetHTML_SaveProxyIpMethod(richTextBox1);
                 gs.Url = "http://ip004.com/proxycate_";
                 gs.Url_plus = ".html";
                 //gs.Xpath = "//*[@id='proxytable']";//starts-with('XML','X')//input[@type='text'] 

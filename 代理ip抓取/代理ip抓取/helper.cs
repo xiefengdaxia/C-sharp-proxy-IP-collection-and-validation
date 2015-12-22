@@ -47,7 +47,7 @@ namespace 代理ip抓取
                 {
                     if (!html.Contains("111.13.62.153"))
                     {
-                        saveIpTxt(proxyip, Form1.txtpath + "验证可用√√高匿代理ip");
+                        saveIpTxt(proxyip, "验证可用√√高匿代理ip");
                         lock (q)
                         {
                             q.Gaoni++;
@@ -90,21 +90,21 @@ namespace 代理ip抓取
             }
             return result;
         }
-
+        public static string path = Application.StartupPath + "\\代理ip\\";
         public static object locker = new object();
         public static void saveIpTxt(string ips, string txtName)
         {
             lock (locker)
             {
-                if (File.Exists(Application.StartupPath + "\\" + txtName + ".txt"))
+                if (File.Exists(path + txtName + ".txt"))
                 {
-                    StreamWriter streamWriter = File.AppendText(txtName + ".txt");
+                    StreamWriter streamWriter = File.AppendText(path + txtName + ".txt");
                     streamWriter.WriteLine(ips);
                     streamWriter.Close();
                 }
                 else
                 {
-                    StreamWriter streamWriter = File.CreateText(txtName + ".txt");
+                    StreamWriter streamWriter = File.CreateText(path + txtName + ".txt");
                     streamWriter.WriteLine(ips);
                     streamWriter.Close();
                 }
