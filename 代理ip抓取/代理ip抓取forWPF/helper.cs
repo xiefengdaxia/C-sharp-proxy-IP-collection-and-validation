@@ -46,7 +46,7 @@ namespace 代理ip抓取forWPF
                     }
                     if (html.Length > 10)
                     {
-                        if (!html.Contains("111.13.62.153"))
+                        if (!html.Contains(localhostIpAddress))
                         {
                             saveIpTxt(proxyip, "验证可用√√高匿代理ip");
                             lock (q)
@@ -91,7 +91,7 @@ namespace 代理ip抓取forWPF
                 }
                 return result;
             }
-            public static string path = "\\代理ip\\";
+            public static string path = AppDomain.CurrentDomain.BaseDirectory+"\\代理ip\\";
             public static object locker = new object();
             public static void saveIpTxt(string ips, string txtName)
             {

@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.Win32;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -63,16 +65,16 @@ namespace 代理ip抓取forWPF
         }
         private void Window_Loaded(object sender, System.Windows.RoutedEventArgs e)
         {
-        	// 在此处添加事件处理程序实现。
+            // 在此处添加事件处理程序实现。
             //showThreadCount();
             connectToDatabase();
             showDataGV();
-            DG.LoadingRow += new EventHandler<DataGridRowEventArgs>(DG_LoadingRow); 
+            DG.LoadingRow += new EventHandler<DataGridRowEventArgs>(DG_LoadingRow);
         }
 
         private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-        	// 在此处添加事件处理程序实现。
+            // 在此处添加事件处理程序实现。
             SQLiteCommandBuilder bu = new SQLiteCommandBuilder(da);
             da.Update(ds, "Table");
             MessageBox.Show("保存成功！");
@@ -124,7 +126,7 @@ namespace 代理ip抓取forWPF
         }
 
         public static object locker = new object();
-        public static string txtpath ="\\代理ip\\";
+        public static string txtpath = "\\代理ip\\";
         public static void saveIpTxt(string ips, string txtName)
         {
             lock (locker)
@@ -223,9 +225,242 @@ namespace 代理ip抓取forWPF
                 MessageBox.Show(ex.Message);
             }
         }
+        Queue[] qrr;
+        string[] path = null;
+        private void importTXT_Click(object sender, RoutedEventArgs e)
+        {
+
+            try
+            {
+                OpenFileDialog ofd = new OpenFileDialog();
+                ofd.Title = "打开";
+                ofd.Filter = "所有文件|*.txt";
+                ofd.Multiselect = true;
+                if (ofd.ShowDialog() == true)
+                {
+                    path = ofd.FileNames;
+                }
+                if (path == null)
+                {
+                    return;
+                }
+                qrr = new Queue[maxThread];
+                Thread worker = new Thread(delegate()
+                {
+                    DateTime dt_read_ip_txt = DateTime.Now;
+                    StringBuilder content = new StringBuilder();
+                    for (int i = 0; i < path.Length; i++)
+                    {
+                        using (StreamReader sr = new StreamReader(path[i]))
+                        {
+                            content.AppendLine(sr.ReadToEnd());//一次性读入内存
+                        }
+                    }
+
+
+                    MemoryStream ms = new MemoryStream(Encoding.GetEncoding("GB2312").GetBytes(content.ToString()));//放入内存流，以便逐行读取
+                    linecount = 0;
+                    string line = string.Empty;
+                    ipArr = new ArrayList();
+                    Queue myQ = new Queue();
+
+
+                    using (StreamReader sr = new StreamReader(ms))
+                    {
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            if (line.Trim() != "")
+                            {
+                                myQ.Enqueue(line);
+                                linecount++;
+                            }
+                        }
+                        this.importTXT.Dispatcher.Invoke(new Action(() =>
+                        {
+                            importTXTCount.Text = "导入计数:" + myQ.Count;
+                        }));
+                    }
+                    TimeSpan ts = DateTime.Now - dt_read_ip_txt;
+                    this.importTXT.Dispatcher.Invoke(new Action(() =>
+                       {
+                           importTXTCount.Text += "条\n读取用时:" + ts.TotalMilliseconds + "ms";
+                       }));
+                    int a = 0;
+                    double oneQueCount = Math.Ceiling((myQ.Count) / (Convert.ToDouble(maxThread)));
+                    for (int i = 0; i < maxThread; i++)
+                    {
+                        qrr[i] = new Queue();
+                        for (int j = 0; j < oneQueCount; j++)
+                        {
+                            if (myQ.Count != 0)
+                            {
+                                qrr[i].Enqueue(myQ.Dequeue().ToString());
+
+                            }
+                        }
+                        a += qrr[i].Count;
+                    }
+
+                    MessageBox.Show("总数:" + a + "条，已分" + qrr.Length + "小队逐个击破！", "友情提示");
+                });
+                worker.IsBackground = true;
+                worker.Start();
+                //worker.Join();
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.StackTrace, ex.Message);
+            }
+        }
+        //public ArrayList ipArr;
+        //public long linecount = 0;
+        //public static queueresult[] qr;
+        private void validationIP1_Click(object sender, RoutedEventArgs e)
+        {
+            if (path == null)
+            {
+                MessageBox.Show("你还没有导入txt！", "友情提示");
+                return;
+            }
+            MessageBox.Show("正在获取您的外网ip地址！", "友情提示");
+            ipAddress = getLocalhostIpAddress();
+            MessageBox.Show("成功获取您的外网ip地址：\n\r" + ipAddress, "友情提示");
+            qr = new queueresult[maxThread];
+            checkedCount = 0;
+            gaoni = 0;
+            touming = 0;
+            fail = 0;
+            queueID = 0;
+            Thread worker = new Thread(delegate()
+            {
+                try
+                {
+                    for (int i = 0; i < maxThread; i++)
+                    {
+                        // 创建指定数量的线程
+                        // 是线程调用Run方法
+                        // 启动线程
+                        Thread trd = new Thread(new ParameterizedThreadStart(checkProxyIp));
+                        trd.Name = i.ToString();
+                        trd.Start(i);
+                        ShowText(trd.Name + "已经创建！\n\r");
+                        trd.IsBackground = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+
+            });
+            worker.Start();
+        }
+        public int checkedCount = 0;
+        public int gaoni = 0;
+        public int touming = 0;
+        public int fail = 0;
+        public int queueID = 0;
+
+
+        public void ShowText(string str)
+        {
+            this.richTextBox1.Dispatcher.Invoke(
+                new Action(delegate
+                    {
+                        this.richTextBox1.AppendText(str);
+                    }));
+        }
+
+        public void UpdateLabel(queueresult r)
+        {
+            //if (InvokeRequired)
+            //{
+            //    this.Invoke((Action<queueresult>)UpdateLabel, r);
+            //    return;
+            //}
+
+            checkedCount += r.Checkedcount;
+            fail += r.Fail;
+            gaoni += r.Gaoni;
+            touming += r.Touming;
+            this.validationIP.Dispatcher.Invoke(
+                new Action(delegate
+                    {
+                        validationIP.Text = "验证：" + checkedCount + "\n失败：" + fail + "\n透明：" + touming + "\n高匿：" + gaoni;
+                    }));
+            
+        }
+        /// <summary>
+        /// 获取本机的外网ip地址
+        /// </summary>
+        /// <returns></returns>
+        public string ipAddress;
+        private string getLocalhostIpAddress()
+        {
+            string externalIP = string.Empty;
+            var regex = @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b";
+            try
+            {
+               
+                using (var webclient = new WebClient())
+                {
+                    var rawRes = webclient.DownloadString("http://ip.cn");
+                    externalIP = Regex.Match(rawRes, regex).Value;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message,"友情提示");
+            }
+            return externalIP;
+        }
+        private void checkProxyIp(object i)
+        {
+
+            try
+            {
+                //bool releasedFlag = false;
+                //muxConsole.WaitOne(); //阻塞队列  
+                //Interlocked.Increment(ref poolFlag);//标记+1  
+                //if (poolFlag != maxThread) //判断是否等于上限  
+                //{
+                //    muxConsole.ReleaseMutex(); //如果此线程达不到可执行线程上限,则继续开通,让后面的线程进来  
+                //    releasedFlag = true;
+                //}
+
+                var queueID = (int)i;
+                queueresult q = qr[queueID] = new queueresult();
+                ShowText(i + "线程开始,队列id：" + queueID + "需要处理数" + qrr[queueID].Count + "\n\r");
+                //while (qrr[queueID].Count != 0)
+                while (qrr[queueID].Count > 0)
+                {
+                    var r = helper.DownLoadHtml("http://ip.cn/", qrr[queueID].Dequeue().ToString(), q, ipAddress);
+                    //checkedCount = 0;
+                    //fail = 0;
+                    //gaoni = 0;
+                    //touming = 0;
+                    //lock (helper.count_locker)
+                    //{
+                    UpdateLabel(r);
+                }
+
+                ShowText("队列" + i + "验证：" + q.Checkedcount + "||失败:" + q.Fail + "||透明:" + q.Touming + "||高匿:" + q.Gaoni + "\n\r");
+                //label1.Text = "验证：" + q.Checkedcount + "||失败:" + q.Fail + "||透明:" + q.Touming + "||高匿:" + q.Gaoni;
+                //Interlocked.Decrement(ref poolFlag);
+                //if (!releasedFlag) muxConsole.ReleaseMutex();
+                //ShowText(Thread.CurrentThread.Name + "线程已经停止运行...\n\r");
+            }
+
+            catch (Exception ex)
+            {
+                ShowText("队列id：" + i + "\n\r" + ex.Message + "\n\r" + ex.StackTrace + "\n\r");
+            }
+
+        }
     }
 
-   
+
     /// <summary>
     /// 根据网址下载HTML源码
     /// 使用解析利器HtmlAgilityPack过滤HTML内容
@@ -275,22 +510,22 @@ namespace 代理ip抓取forWPF
             get { return end; }
             set { end = value; }
         }
-        
+
         RichTextBox rtb;
 
         public GetHTML_SaveProxyIpMethod(RichTextBox rtb)
         {
             this.rtb = rtb;
         }
-        //public void appendLine(string text)
-        //{
-        //    Action<string> actionDelegate = (x) =>
-        //    {
+        public void appendLine(string text)
+        {
+            Action<string> actionDelegate = (x) =>
+            {
 
-        //        this.rtb.AppendText(text + "\r\n");
-        //    };
-        //    this.Dispatcher.Invoke(actionDelegate, text);
-        //}
+                this.rtb.AppendText(text + "\r\n");
+            };
+            rtb.Dispatcher.Invoke(actionDelegate, text);
+        }
 
         public static string 过滤(string html)
         {
@@ -332,7 +567,7 @@ namespace 代理ip抓取forWPF
         }
 
         public static object locker = new object();
-        public static string txtpath = "\\代理ip\\";
+        public static string txtpath = AppDomain.CurrentDomain.BaseDirectory + "\\代理ip\\";
         public static void saveIpTxt(string ips, string txtName)
         {
             lock (locker)
@@ -378,7 +613,7 @@ namespace 代理ip抓取forWPF
         {
             try
             {
-                //appendLine(DateTime.Now + "\n" + txtName + url + "开始采集！");
+                appendLine(DateTime.Now + "\n" + txtName + url + "开始采集！");
                 if (start == 0)
                 {
                     GetHTML_SaveProxyIp(url, xpath, txtName, start);
@@ -392,11 +627,11 @@ namespace 代理ip抓取forWPF
 
                     }
                 }
-                //appendLine(DateTime.Now + "\n" + txtName + url + "采集完毕！\r");
+                appendLine(DateTime.Now + "\n" + txtName + url + "采集完毕！\r");
             }
             catch (Exception ex)
             {
-                //appendLine(DateTime.Now + "\n" + txtName + url + "采集出错！\n" + ex.Message);
+                appendLine(DateTime.Now + "\n" + txtName + url + "采集出错！\n" + ex.Message);
                 MessageBox.Show(ex.StackTrace, txtName + ">>" + ex.Message);
             }
         }

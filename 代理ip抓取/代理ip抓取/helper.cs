@@ -45,7 +45,7 @@ namespace 代理ip抓取
                 }
                 if (html.Length > 10)
                 {
-                    if (!html.Contains("111.13.62.153"))
+                    if (!html.Contains(localhostIpAddress))
                     {
                         saveIpTxt(proxyip, "验证可用√√高匿代理ip");
                         lock (q)
