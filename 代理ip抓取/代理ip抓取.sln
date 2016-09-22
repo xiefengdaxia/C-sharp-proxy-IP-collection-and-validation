@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "代理ip抓取", "代理ip�
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "代理ip抓取forWPF", "代理ip抓取forWPF\代理ip抓取forWPF.csproj", "{5E554B5D-72EC-4FB0-8FFF-ADA4B23EBB85}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "小说下载", "小说下载\小说下载.csproj", "{0358EFE0-F38F-4706-8862-1C2F014C4BA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{5E554B5D-72EC-4FB0-8FFF-ADA4B23EBB85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E554B5D-72EC-4FB0-8FFF-ADA4B23EBB85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E554B5D-72EC-4FB0-8FFF-ADA4B23EBB85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0358EFE0-F38F-4706-8862-1C2F014C4BA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0358EFE0-F38F-4706-8862-1C2F014C4BA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0358EFE0-F38F-4706-8862-1C2F014C4BA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0358EFE0-F38F-4706-8862-1C2F014C4BA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
